@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import * as mm from '@magenta/music';
 import Async from "react-async"
-import { useAsync } from "react-async"
+import Sketch from 'react-p5'
 
 class Square extends React.Component {
   render() {
@@ -63,30 +63,14 @@ class Game extends React.Component {
   }
 }
 
-class PlayButton extends React.Component {
-  render(){
-    let model = this.props.model;
-    let player = this.props.player;
-    //const state = useAsync({ promiseFn: this.props.model.initialize })
-
-    // this.props.model
-    //   .initialize()
-    //   .then(() => this.props.model.sample(1))
-    //   .then(samples => {
-    //     this.props.player.resumeContext();
-    //     this.props.player.start(samples[0])
-    //   });
-
-      return (
-        "o"
-      )
-  }
-}
-
 
 
 
 class PlayTrio extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state = {samples: []};
+    }
 
     render() {
       const model = new mm.MusicVAE( 'https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/trio_4bar');
@@ -96,18 +80,35 @@ class PlayTrio extends React.Component {
         return await model.initialize();
       }
 
-      let samples;
 
-      const generate_samples = async() =>{
-        samples = await model.sample(1);
+      const generate_samples = async() => {
+        var samples = await model.sample(1);
+        this.setState({samples: [...this.state.samples, ...samples]})
+        //console.log(samples[0].notes)
       }
 
       const play = async () => {
-        if(samples) {
+        if(this.state.samples) {
             player.resumeContext();
-            player.start(samples[0])
+            player.start(this.state.samples[0])
           };
       }
+
+      let x = 50
+      let y = 50
+
+      const setup = (p5, canvasParentRef) => {
+        p5.createCanvas(500, 100).parent(canvasParentRef)
+      }
+
+      const draw = p5 => {
+        p5.background(0)
+        p5.ellipse(x, y, 10, 10)
+        // NOTE: Do not use setState in draw function or in functions that is executed in draw function... pls use normal variables or class properties for this purposes
+        x++
+      }
+
+      let samples_canvas = this.state.samples.map((sample, index) => <Sketch setup={setup} draw={draw} key={index}/>);
 
 
       return (
@@ -122,6 +123,9 @@ class PlayTrio extends React.Component {
                    </Async.Fulfilled>
                    <Async.Rejected>{error => `Something went wrong: ${error.message}`}</Async.Rejected>
                  </Async>
+                 <div>
+                   { samples_canvas }
+                 </div>
          </div>
 
       );

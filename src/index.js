@@ -14,32 +14,30 @@ class PlayTrio extends React.Component {
 
     render() {
       const model = new mm.MusicVAE( 'https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/trio_4bar');
-      const player = new mm.Player();
 
       const init_model = async ({model}) => {
         return await model.initialize();
       }
-
 
       const generate_samples = async() => {
         var samples = await model.sample(1);
         this.setState({samples: [...this.state.samples, ...samples]})
       }
 
-      const play = async () => {
-        if(this.state.samples) {
-            player.resumeContext();
-            player.start(this.state.samples[0])
-          };
-      }
 
-      const play_sample = async (sample) => {
-            player.resumeContext();
-            player.start(sample)
-      }
+// OLD PLAYER
+      // const player = new mm.Player();
+      //
+      // const play_sample = async (sample) => {
+      //       player.resumeContext();
+      //       player.start(sample)
+      // }
+/*                             END OF OLD PLAYER                              */
+
 
 
       let samples_canvas = this.state.samples.map((sample, index) =>{
+        console.log(sample.notes)
         let notesByInstrument = {}
         sample.notes.map((note) => {
           if(!(note.instrument in notesByInstrument))
@@ -49,9 +47,6 @@ class PlayTrio extends React.Component {
         return (
          <div key={index}>
             <PianoRoll notes={notesByInstrument[0]} />
-            <PianoRoll notes={notesByInstrument[1]} />
-            <PianoRoll notes={notesByInstrument[2]} />
-            <button type="button" onClick={(e) => play_sample(sample, e)} >PONÉ PLAY</button>
          </div>
        )
        });
